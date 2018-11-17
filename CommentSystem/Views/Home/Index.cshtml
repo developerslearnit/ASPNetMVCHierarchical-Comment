@@ -1,0 +1,188 @@
+﻿@{
+    ViewBag.Title = "Home Page";
+}
+
+
+<div class="row">
+
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-12">
+                <h3 class="page-title">User Comment</h3>
+            </div><!-- /col-sm-12 -->
+        </div><!-- /row -->
+        <div class="row">
+            <div class="col-sm-1">
+                <div class="thumbnail">
+                    <img class="img-responsive user-photo" src="https://ssl.gstatic.com/accounts/ui/avatar_2x.png">
+                </div><!-- /thumbnail -->
+            </div><!-- /col-sm-1 -->
+            <div class="col-sm-6">
+                <div class="panel panel-default">
+                    <div class="panel-body">
+                        <textarea cols="15" id="commentInput" class="form-control" placeholder="Join the conversation.."></textarea>
+                    </div><!-- /panel-body -->
+                    <div class="panel-heading comment-action">
+                        <div class="submit-comment">
+                            <a id="addNewCommentBtn" href="#">Submit</a>
+                        </div>
+                    </div>
+                </div><!-- /panel panel-default -->
+            </div><!-- /col-sm-5 -->
+        </div><!-- /row -->
+
+        @Html.Action("CommentPartial")
+
+    </div><!-- /container -->
+</div>
+
+
+<script id="comment-template" type="text/x-handlebars-template">
+    <li class="comment" data-id="{{commentId}}">
+        <div class="avatar">
+            <a href="javascript:void(0);">
+                <img src="https://ssl.gstatic.com/accounts/ui/avatar_2x.png" width="55" height="55">
+            </a>
+        </div>
+        <div class="comment-body">
+            <header>
+                <a href="javascript:void(0);" class="userlink">{{username}}</a> - <span class="pubdate">
+                    posted {{strCommentDate}}
+                </span>
+            </header>
+            <p>
+                {{commentText}}
+            </p>
+            <footer>
+                <a class="reply-link" href="{{parentId}}">Reply</a>
+            </footer>
+        </div>
+    </li>
+</script>
+
+<script id="reply-template" type="text/template">
+    <div style="padding-top:10px" class="row reply-form">
+        <div class="col-sm-2">
+            <div class="thumbnail">
+                <img class="img-responsive user-photo" src="https://ssl.gstatic.com/accounts/ui/avatar_2x.png">
+                </div>
+            </div>
+            <div class="col-sm-10">
+                <div class="panel panel-default">
+                    <div class="panel-body">
+                        <textarea cols="15" id="replyInput" class="form-control" placeholder="Reply to conversation.."></textarea>
+                    </div>
+                    <div class="panel-heading comment-action">
+                        <div class="submit-comment">
+                            <a class="addReplyBtn" href="#">Submit</a>
+                            <input type="hidden" name="hidParentId" class="hidParentId"/>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+</script>
+
+
+
+@section scripts{
+    <script src="~/Scripts/handlebars-v4.0.12.js"></script>
+    <script>
+
+        function addNewComment(data) {
+            return $.ajax({
+                type: "POST",
+                url: '@Url.Action("addNewComment", "Home")',
+                data: data,
+                dataType: 'json',
+                contentType: 'application/json;charset=utf-8'
+            });
+        }
+
+
+
+    $(function () {
+
+        var source = document.getElementById("comment-template").innerHTML;
+        var template = Handlebars.compile(source);
+
+        
+        $("#addNewCommentBtn").click(function (e) {
+            e.preventDefault();
+            var data = JSON.stringify({
+                parentId: 0,
+                commentText: $("#commentInput").val(),
+                username: Math.random().toString(36).substring(2, 10) + Math.random().toString(36).substring(2, 5)
+            });
+
+            
+            $.when(addNewComment(data)).then(function (response) {
+                if (response.error == false) {
+                    var $commentHtml = template(response.result);
+                    $(".comments").append(commentHtml);
+                    $("#commentInput").val('');
+                } else {
+
+                }
+            }).fail(function (err) {
+                console.log(err);
+            })
+        });
+
+
+        $(document).on("click", ".reply-link", function (e) {
+            e.preventDefault();
+            var $self = $(this);
+            var $commentListItem = $self.parents(".comment-body");
+            var replySource = document.getElementById("reply-template").innerHTML;
+            $commentListItem.after(replySource);
+
+            $(document).find(".hidParentId").val($self.attr("href"));
+            
+        });
+
+        
+
+        $(document).on("click", ".addReplyBtn", function (e) {
+            e.preventDefault();
+            var $self = $(this);
+            var $replyInput = $(document).find("#replyInput");
+            var parentId = $(document).find(".hidParentId").val();
+            var $repliesUL = $(document).find("ul[data-parentid='" + parentId + "']");
+            var $commentBody = $(document).find("div[data-id='" + parentId + "']");
+            var replyULCount = $repliesUL.length;
+
+            var data = JSON.stringify({
+                parentId: parentId,
+                commentText: $replyInput.val(),
+                username: Math.random().toString(36).substring(2, 10) + Math.random().toString(36).substring(2, 5)
+            });
+
+            $.when(addNewComment(data)).then(function (response) {
+                if (response.error == false) {
+                    var commentHtml = template(response.result);
+                    if (replyULCount > 0) {
+                        $repliesUL.append(commentHtml);
+                    } else {
+                        $commentBody.append("<ul class='replies'></ul>")
+                            .append(commentHtml)
+                    }
+
+                    $(document).find(".reply-form").remove();
+                    
+                } else {
+
+                }
+            }).fail(function (err) {
+                console.log(err);
+            })
+        
+        });
+
+
+
+    });
+    </script>
+
+
+}

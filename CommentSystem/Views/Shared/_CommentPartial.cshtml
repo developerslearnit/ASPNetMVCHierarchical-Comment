@@ -1,0 +1,50 @@
+﻿@model IEnumerable<CommentSystem.Models.Comment>
+
+@helper RenderComment(IEnumerable<CommentSystem.Models.Comment> comments)
+{
+    foreach (var comment in comments)
+    {
+
+        <li class="comment" data-id="@comment.CommentID">
+            <div class="avatar">
+                <a href="javascript:void(0);">
+                    <img src="https://ssl.gstatic.com/accounts/ui/avatar_2x.png" width="55" height="55">
+                </a>
+            </div>
+            <div data-id="@comment.CommentID" class="comment-body">
+                <header><a href="javascript:void(0);" class="userlink">@comment.Username</a> - <span class="pubdate">posted @comment.CommentDate.ToString("dd-MM-yyyy")</span></header>
+                <p>
+                    @comment.CommentText
+                </p>
+                <footer>
+                    <a class="reply-link" href="@comment.CommentID">Reply</a>
+                </footer>
+            </div>
+
+            @{
+                var children = Model.Where(x => x.ParentId == comment.CommentID).ToList();
+                if (children.Count() > 0)
+                {
+                    <ul data-parentid="@comment.CommentID" class="replies">
+                        @RenderComment(children);
+                    </ul>
+                }
+            }
+
+        </li>
+
+    }
+
+}
+
+<div id="comment-section" class="row">
+    <div class="col-sm-7">
+        <ul class="comments">
+            @RenderComment(Model.Where(x => x.ParentId == 0))
+        </ul>
+    </div>
+
+</div>
+
+
+
