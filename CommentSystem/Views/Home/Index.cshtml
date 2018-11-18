@@ -9,31 +9,31 @@
         <div class="row">
             <div class="col-sm-12">
                 <h3 class="page-title">User Comment</h3>
-            </div><!-- /col-sm-12 -->
-        </div><!-- /row -->
+            </div>
+        </div>
         <div class="row">
             <div class="col-sm-1">
                 <div class="thumbnail">
                     <img class="img-responsive user-photo" src="https://ssl.gstatic.com/accounts/ui/avatar_2x.png">
-                </div><!-- /thumbnail -->
-            </div><!-- /col-sm-1 -->
+                </div>
+            </div>
             <div class="col-sm-6">
                 <div class="panel panel-default">
                     <div class="panel-body">
                         <textarea cols="15" id="commentInput" class="form-control" placeholder="Join the conversation.."></textarea>
-                    </div><!-- /panel-body -->
+                    </div>
                     <div class="panel-heading comment-action">
                         <div class="submit-comment">
                             <a id="addNewCommentBtn" href="#">Submit</a>
                         </div>
                     </div>
-                </div><!-- /panel panel-default -->
-            </div><!-- /col-sm-5 -->
-        </div><!-- /row -->
+                </div>
+            </div>
+        </div>
 
         @Html.Action("CommentPartial")
 
-    </div><!-- /container -->
+    </div>
 </div>
 
 
@@ -54,9 +54,10 @@
                 {{commentText}}
             </p>
             <footer>
-                <a class="reply-link" href="{{parentId}}">Reply</a>
+                <a class="reply-link" href="{{commentId}}">Reply</a>
             </footer>
         </div>
+        
     </li>
 </script>
 
@@ -119,10 +120,10 @@
             $.when(addNewComment(data)).then(function (response) {
                 if (response.error == false) {
                     var $commentHtml = template(response.result);
-                    $(".comments").append(commentHtml);
+                    $(".comments").append($commentHtml);
                     $("#commentInput").val('');
                 } else {
-
+                    console.log("An error has occured");
                 }
             }).fail(function (err) {
                 console.log(err);
@@ -149,8 +150,10 @@
             var $replyInput = $(document).find("#replyInput");
             var parentId = $(document).find(".hidParentId").val();
             var $repliesUL = $(document).find("ul[data-parentid='" + parentId + "']");
-            var $commentBody = $(document).find("div[data-id='" + parentId + "']");
+            var $commentBody = $(document).find("[data-id='" + parentId + "']");
             var replyULCount = $repliesUL.length;
+
+            
 
             var data = JSON.stringify({
                 parentId: parentId,
@@ -161,17 +164,20 @@
             $.when(addNewComment(data)).then(function (response) {
                 if (response.error == false) {
                     var commentHtml = template(response.result);
+                    
                     if (replyULCount > 0) {
+                        
                         $repliesUL.append(commentHtml);
                     } else {
+                        
                         $commentBody.append("<ul class='replies'></ul>")
-                            .append(commentHtml)
+                            .append(commentHtml);                        
                     }
 
                     $(document).find(".reply-form").remove();
                     
                 } else {
-
+                    console.log("An error has occured");
                 }
             }).fail(function (err) {
                 console.log(err);
